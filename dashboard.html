@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructor Dashboard – PHED 3806 HRV</title>
+<style>
+:root {
+  --primary:#1a5276; --accent:#2e86c1; --light:#d6eaf8;
+  --green:#1e8449;   --red:#c0392b;    --amber:#d4ac0d;
+  --bg:#f4f6f8;      --card:#fff;      --border:#d0d7de;
+  --text:#1c2833;    --muted:#717d87;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── AUTH SCREEN ── */
+#auth-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:linear-gradient(135deg,#1a5276 0%,#2e86c1 100%);
+}
+.auth-card{
+  background:#fff;border-radius:16px;padding:44px 40px;width:100%;max-width:420px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+}
+.auth-card .lock-icon{font-size:2.5rem;text-align:center;margin-bottom:16px;}
+.auth-card h1{font-size:1.4rem;color:var(--primary);text-align:center;margin-bottom:4px;}
+.auth-card .sub{color:var(--muted);font-size:0.85rem;text-align:center;margin-bottom:28px;}
+.form-group{margin-bottom:18px;}
+.form-group label{display:block;font-weight:600;font-size:0.83rem;margin-bottom:6px;}
+.form-group input,.form-group select{
+  width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:8px;
+  font-size:0.93rem;transition:border-color .2s;
+}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--accent);}
+.btn-full{
+  width:100%;padding:12px;border:none;border-radius:8px;font-size:0.95rem;
+  font-weight:700;cursor:pointer;transition:background .2s;
+}
+.btn-primary-full{background:var(--primary);color:#fff;}
+.btn-primary-full:hover{background:#154360;}
+.btn-green-full{background:var(--green);color:#fff;}
+.btn-green-full:hover{background:#145a32;}
+.err{color:var(--red);font-size:0.83rem;margin-top:8px;display:none;}
+.hint{color:var(--muted);font-size:0.78rem;margin-top:10px;text-align:center;line-height:1.4;}
+.link-btn{background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.83rem;text-decoration:underline;}
+
+/* ── MAIN DASHBOARD ── */
+#dashboard{display:none;}
+.dash-header{
+  background:var(--primary);color:#fff;padding:14px 28px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:50;box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+.dash-header h1{font-size:1.05rem;font-weight:700;}
+.header-actions{display:flex;gap:10px;align-items:center;}
+.hdr-btn{
+  padding:7px 14px;border-radius:6px;border:1.5px solid rgba(255,255,255,.4);
+  font-size:0.8rem;font-weight:600;cursor:pointer;color:#fff;background:rgba(255,255,255,.12);
+  transition:background .2s;
+}
+.hdr-btn:hover{background:rgba(255,255,255,.25);}
+.hdr-btn.danger{border-color:rgba(231,76,60,.6);background:rgba(231,76,60,.2);}
+.hdr-btn.danger:hover{background:rgba(231,76,60,.4);}
+
+.dash-body{padding:24px 28px;max-width:1300px;margin:0 auto;}
+
+/* ── STATS BAR ── */
+.stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.stat-tile{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px 18px;text-align:center;
+}
+.stat-tile .n{font-size:2rem;font-weight:800;color:var(--primary);}
+.stat-tile .l{font-size:0.75rem;color:var(--muted);margin-top:2px;}
+
+/* ── FILTER BAR ── */
+.filter-bar{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  padding:14px 18px;margin-bottom:18px;
+  display:flex;gap:12px;flex-wrap:wrap;align-items:center;
+}
+.filter-bar input[type=search]{
+  flex:1;min-width:180px;padding:8px 12px;border:1.5px solid var(--border);
+  border-radius:7px;font-size:0.88rem;
+}
+.filter-bar input[type=search]:focus{outline:none;border-color:var(--accent);}
+.filter-bar select{
+  padding:8px 10px;border:1.5px solid var(--border);border-radius:7px;
+  font-size:0.88rem;cursor:pointer;background:#fff;
+}
+.filter-bar select:focus{outline:none;border-color:var(--accent);}
+
+/* ── TABLE ── */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:0.86rem;}
+thead tr{background:var(--primary);color:#fff;}
+th{padding:11px 14px;text-align:left;font-weight:600;font-size:0.82rem;cursor:pointer;user-select:none;white-space:nowrap;}
+th:hover{background:#154360;}
+th .sort-arrow{opacity:.5;margin-left:4px;}
+th.sorted .sort-arrow{opacity:1;}
+tbody tr{border-bottom:1px solid #eaecef;transition:background .15s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:#f8fafc;}
+td{padding:11px 14px;vertical-align:top;}
+.case-badge{
+  display:inline-block;padding:2px 9px;border-radius:12px;font-size:0.75rem;font-weight:700;
+}
+.case-a{background:#d6eaf8;color:#1a5276;}
+.case-b{background:#d5f5e3;color:#1e8449;}
+.preview-text{color:var(--muted);font-size:0.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+.action-cell{white-space:nowrap;}
+.tbl-btn{
+  padding:5px 11px;border-radius:5px;border:1.5px solid var(--border);
+  font-size:0.78rem;font-weight:600;cursor:pointer;background:#fff;transition:all .15s;
+  margin-right:4px;
+}
+.tbl-btn.view{border-color:var(--accent);color:var(--accent);}
+.tbl-btn.view:hover{background:var(--accent);color:#fff;}
+.tbl-btn.del{border-color:var(--red);color:var(--red);}
+.tbl-btn.del:hover{background:var(--red);color:#fff;}
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted);}
+.empty-state .big{font-size:2.5rem;margin-bottom:10px;}
+
+/* ── MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;
+  display:none;align-items:flex-start;justify-content:center;padding:40px 20px;overflow-y:auto;
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:#fff;border-radius:14px;width:100%;max-width:720px;
+  box-shadow:0 20px 60px rgba(0,0,0,.3);
+}
+.modal-header{
+  background:var(--primary);color:#fff;padding:18px 24px;border-radius:14px 14px 0 0;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.modal-header h2{font-size:1.05rem;}
+.modal-close{
+  background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;
+  line-height:1;opacity:.7;
+}
+.modal-close:hover{opacity:1;}
+.modal-body{padding:22px 24px;}
+.meta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:18px;}
+.meta-item{background:var(--bg);border-radius:8px;padding:10px 14px;}
+.meta-item .lbl{font-size:0.72rem;color:var(--muted);font-weight:600;text-transform:uppercase;margin-bottom:3px;}
+.meta-item .val{font-size:0.88rem;font-weight:600;}
+.settings-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px;}
+.settings-item{background:#fafbfc;border:1px solid var(--border);border-radius:7px;padding:8px 12px;}
+.settings-item .lbl{font-size:0.7rem;color:var(--muted);margin-bottom:2px;}
+.settings-item .val{font-size:0.83rem;font-weight:600;color:var(--primary);}
+.analysis-box{background:var(--bg);border-radius:8px;padding:16px;line-height:1.65;font-size:0.9rem;white-space:pre-wrap;word-break:break-word;}
+.section-label{font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px;}
+
+/* ── CHANGE PASSWORD MODAL ── */
+#pw-modal .modal-header{background:#4a235a;}
+#pw-modal .modal-body{padding:22px 24px;}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .stats-bar{grid-template-columns:repeat(2,1fr);}
+  .meta-grid,.settings-grid{grid-template-columns:1fr;}
+  .preview-text{max-width:140px;}
+  .dash-body{padding:14px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════ AUTH SCREEN ══════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="lock-icon">🔒</div>
+    <h1 id="auth-title">Instructor Dashboard</h1>
+    <p class="sub" id="auth-sub">PHED 3806 · HRV Case Study Explorer</p>
+
+    <!-- Setup (first use) -->
+    <div id="setup-form">
+      <p style="font-size:0.85rem;color:#555;margin-bottom:18px;line-height:1.5;">
+        Welcome! No password has been set yet.<br>
+        Create your instructor password to continue.
+      </p>
+      <div class="form-group"><label>New Password</label>
+        <input type="password" id="setup-pw1" placeholder="Enter a password" autocomplete="new-password">
+      </div>
+      <div class="form-group"><label>Confirm Password</label>
+        <input type="password" id="setup-pw2" placeholder="Confirm password" autocomplete="new-password">
+      </div>
+      <button class="btn-full btn-green-full" onclick="doSetup()">Set Password &amp; Enter Dashboard</button>
+      <p class="err" id="setup-err"></p>
+    </div>
+
+    <!-- Login (returning) -->
+    <div id="login-form" style="display:none;">
+      <div class="form-group"><label>Instructor Password</label>
+        <input type="password" id="login-pw" placeholder="Enter password"
+               autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn-full btn-primary-full" onclick="doLogin()">Enter Dashboard</button>
+      <p class="err" id="login-err"></p>
+      <p class="hint">
+        <button class="link-btn" onclick="showReset()">Forgot password? Reset (clears all submissions)</button>
+      </p>
+    </div>
+
+    <!-- Reset warning -->
+    <div id="reset-form" style="display:none;">
+      <p style="font-size:0.87rem;color:var(--red);margin-bottom:16px;line-height:1.5;">
+        ⚠️ Resetting the password will permanently delete all saved student submissions.
+        This cannot be undone.
+      </p>
+      <button class="btn-full" style="background:var(--red);color:#fff;margin-bottom:10px;" onclick="doReset()">
+        Confirm Reset &amp; Clear All Data
+      </button>
+      <button class="btn-full" style="background:var(--muted);color:#fff;" onclick="showLogin()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="dashboard">
+  <header class="dash-header">
+    <h1>📊 Instructor Dashboard — PHED 3806 HRV Case Studies</h1>
+    <div class="header-actions">
+      <span id="firebase-badge" style="display:none;background:#27ae60;color:#fff;font-size:0.72rem;font-weight:700;padding:4px 10px;border-radius:12px;letter-spacing:0.04em;">🔴 LIVE</span>
+      <button class="hdr-btn" onclick="exportCSV()">⬇ Export CSV</button>
+      <button class="hdr-btn" onclick="showChangePw()">🔑 Change Password</button>
+      <button class="hdr-btn danger" onclick="clearAll()">🗑 Clear All</button>
+      <button class="hdr-btn" onclick="doLogout()">← Log Out</button>
+    </div>
+  </header>
+
+  <div class="dash-body">
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-tile"><div class="n" id="stat-total">0</div><div class="l">Total Submissions</div></div>
+      <div class="stat-tile"><div class="n" id="stat-students">0</div><div class="l">Unique Students</div></div>
+      <div class="stat-tile"><div class="n" id="stat-casea">0</div><div class="l">Case A Submitted</div></div>
+      <div class="stat-tile"><div class="n" id="stat-caseb">0</div><div class="l">Case B Submitted</div></div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+      <input type="search" id="filter-search" placeholder="🔍  Search by name or student ID…" oninput="renderTable()">
+      <select id="filter-case" onchange="renderTable()">
+        <option value="">All Cases</option>
+        <option value="A">Case A Only</option>
+        <option value="B">Case B Only</option>
+      </select>
+      <select id="filter-sort" onchange="renderTable()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="name">Name A–Z</option>
+        <option value="id">Student ID</option>
+      </select>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>Student ID</th>
+            <th>Case</th>
+            <th>Submitted</th>
+            <th>Baseline Period</th>
+            <th>Analysis Preview</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="sub-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="empty-state" style="display:none;">
+        <div class="big">📭</div>
+        <p>No submissions yet.</p>
+        <p style="font-size:0.82rem;margin-top:6px;">Students submit their analyses through the case study app.</p>
+      </div>
+    </div>
+
+  </div><!-- end dash-body -->
+</div><!-- end dashboard -->
+
+<!-- ══════════ SUBMISSION DETAIL MODAL ══════════ -->
+<div class="modal-overlay" id="detail-modal" onclick="closeModalOnOverlay(event,'detail-modal')">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title">Submission Detail</h2>
+      <button class="modal-close" onclick="closeModal('detail-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="meta-grid" id="modal-meta"></div>
+      <div class="section-label">Settings Used During Analysis</div>
+      <div class="settings-grid" id="modal-settings"></div>
+      <div class="section-label">Baseline Statistics at Submission</div>
+      <div class="settings-grid" id="modal-stats"></div>
+      <div class="section-label">Full Analysis</div>
+      <div class="analysis-box" id="modal-analysis"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CHANGE PASSWORD MODAL ══════════ -->
+<div class="modal-overlay" id="pw-modal" onclick="closeModalOnOverlay(event,'pw-modal')">
+  <div class="modal" id="pw-modal">
+    <div class="modal-header" style="background:#4a235a;">
+      <h2>Change Instructor Password</h2>
+      <button class="modal-close" onclick="closeModal('pw-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label>Current Password</label>
+        <input type="password" id="cpw-current" placeholder="Current password">
+      </div>
+      <div class="form-group"><label>New Password</label>
+        <input type="password" id="cpw-new1" placeholder="New password">
+      </div>
+      <div class="form-group"><label>Confirm New Password</label>
+        <input type="password" id="cpw-new2" placeholder="Confirm new password">
+      </div>
+      <button class="btn-full btn-primary-full" onclick="doChangePw()" style="margin-top:4px;">Update Password</button>
+      <p class="err" id="cpw-err"></p>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK — same compat build as index.html -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  ★  FIREBASE CONFIG  — must match index.html exactly
+//  Fill in the same values you used in index.html.
+// ══════════════════════════════════════════════════════
+const FIREBASE_CONFIG = {
+  apiKey:            'YOUR_API_KEY',
+  authDomain:        'YOUR_PROJECT_ID.firebaseapp.com',
+  projectId:         'YOUR_PROJECT_ID',
+  storageBucket:     'YOUR_PROJECT_ID.appspot.com',
+  messagingSenderId: 'YOUR_SENDER_ID',
+  appId:             'YOUR_APP_ID'
+};
+const USE_FIREBASE = FIREBASE_CONFIG.apiKey !== 'YOUR_API_KEY';
+let db = null, _unsubscribe = null;
+if (USE_FIREBASE) {
+  try {
+    if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    console.info('✅ Firebase connected — live submission feed active.');
+  } catch(e) { console.warn('Firebase init failed:', e.message); }
+}
+
+// ══════════════════════════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════════════════════════
+const LS_HASH = 'hrv_phed3806_instructor_hash';
+const LS_DATA = 'hrv_phed3806_submissions';
+const SS_AUTH = 'hrv_phed3806_instructor_auth'; // sessionStorage flag
+
+// Rate-limiting state (in-memory; resets on page reload, which is fine)
+let _loginAttempts = 0;
+let _lockUntil     = 0;
+
+// Cached submissions — updated by Firestore onSnapshot or localStorage read
+let _cachedSubs = [];
+
+// ══════════════════════════════════════════════════════
+//  CRYPTO — SHA-256 via SubtleCrypto (built-in, no lib)
+// ══════════════════════════════════════════════════════
+async function sha256(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  XSS PROTECTION — escape all user data before innerHTML
+// ══════════════════════════════════════════════════════
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+    .replace(/'/g,'&#x27;');
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT — decide which auth screen to show
+//  Priority: sessionStorage auth flag → skip password prompt
+//            localStorage hash exists  → show login form
+//            otherwise                 → show first-time setup
+// ══════════════════════════════════════════════════════
+window.onload = function() {
+  const stored = localStorage.getItem(LS_HASH);
+  if (!stored) { showSetup(); return; }
+  // Already authenticated in this browser session (survives refresh, not tab close)
+  if (sessionStorage.getItem(SS_AUTH) === '1') { enterDashboard(); return; }
+  showLogin();
+};
+
+function showSetup() {
+  document.getElementById('setup-form').style.display='block';
+  document.getElementById('login-form').style.display='none';
+  document.getElementById('reset-form').style.display='none';
+  document.getElementById('auth-title').textContent='Set Instructor Password';
+}
+function showLogin() {
+  document.getElementById('setup-form').style.display='none';
+  document.getElementById('login-form').style.display='block';
+  document.getElementById('reset-form').style.display='none';
+  document.getElementById('auth-title').textContent='Instructor Dashboard';
+  setTimeout(()=>document.getElementById('login-pw').focus(),100);
+}
+function showReset() {
+  document.getElementById('setup-form').style.display='none';
+  document.getElementById('login-form').style.display='none';
+  document.getElementById('reset-form').style.display='block';
+}
+
+// ══════════════════════════════════════════════════════
+//  AUTH ACTIONS
+// ══════════════════════════════════════════════════════
+async function doSetup() {
+  const p1 = document.getElementById('setup-pw1').value;
+  const p2 = document.getElementById('setup-pw2').value;
+  const err = document.getElementById('setup-err');
+  err.style.display='none';
+  if (p1.length < 6) { showErr(err,'Password must be at least 6 characters.'); return; }
+  if (p1 !== p2)     { showErr(err,'Passwords do not match.'); return; }
+  const hash = await sha256(p1);
+  localStorage.setItem(LS_HASH, hash);
+  enterDashboard();
+}
+
+async function doLogin() {
+  // Rate-limit check
+  const now = Date.now();
+  if (now < _lockUntil) {
+    const secs = Math.ceil((_lockUntil - now) / 1000);
+    showErr(document.getElementById('login-err'), `Too many failed attempts. Try again in ${secs}s.`);
+    return;
+  }
+  const pw  = document.getElementById('login-pw').value;
+  const err = document.getElementById('login-err');
+  err.style.display='none';
+  if (!pw) { showErr(err,'Please enter your password.'); return; }
+  const hash   = await sha256(pw);
+  const stored = localStorage.getItem(LS_HASH);
+  if (hash !== stored) {
+    _loginAttempts++;
+    if (_loginAttempts >= 5) {
+      _lockUntil = Date.now() + 30000; // 30-second lockout
+      _loginAttempts = 0;
+      showErr(err,'Too many failed attempts. Locked for 30 seconds.');
+    } else {
+      const rem = 5 - _loginAttempts;
+      showErr(err, `Incorrect password. ${rem} attempt${rem===1?'':'s'} remaining.`);
+    }
+    document.getElementById('login-pw').value='';
+    document.getElementById('login-pw').focus();
+    return;
+  }
+  _loginAttempts = 0; // Reset on success
+  enterDashboard();
+}
+
+function doReset() {
+  localStorage.removeItem(LS_HASH);
+  localStorage.removeItem(LS_DATA);
+  showSetup();
+}
+
+function doLogout() {
+  if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; } // Tear down Firestore listener
+  _cachedSubs = [];
+  try { sessionStorage.removeItem(SS_AUTH); } catch(e){}
+  _loginAttempts = 0;
+  _lockUntil = 0;
+  document.getElementById('dashboard').style.display='none';
+  document.getElementById('auth-screen').style.display='flex';
+  document.getElementById('firebase-badge').style.display='none';
+  showLogin();
+  document.getElementById('login-pw').value='';
+}
+
+function enterDashboard() {
+  try { sessionStorage.setItem(SS_AUTH, '1'); } catch(e){}
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('dashboard').style.display='block';
+  loadDashboard();
+}
+
+function showErr(el, msg) {
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ══════════════════════════════════════════════════════
+//  CHANGE PASSWORD
+// ══════════════════════════════════════════════════════
+function showChangePw() {
+  ['cpw-current','cpw-new1','cpw-new2'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('cpw-err').style.display='none';
+  openModal('pw-modal');
+}
+
+async function doChangePw() {
+  const cur  = document.getElementById('cpw-current').value;
+  const n1   = document.getElementById('cpw-new1').value;
+  const n2   = document.getElementById('cpw-new2').value;
+  const err  = document.getElementById('cpw-err');
+  err.style.display='none';
+
+  const curHash    = await sha256(cur);
+  const storedHash = localStorage.getItem(LS_HASH);
+  if (curHash !== storedHash) { showErr(err,'Current password is incorrect.'); return; }
+  if (n1.length < 6)          { showErr(err,'New password must be at least 6 characters.'); return; }
+  if (n1 !== n2)               { showErr(err,'New passwords do not match.'); return; }
+
+  const newHash = await sha256(n1);
+  localStorage.setItem(LS_HASH, newHash);
+  closeModal('pw-modal');
+  alert('Password updated successfully.');
+}
+
+// ══════════════════════════════════════════════════════
+//  DATA LOADING
+// ══════════════════════════════════════════════════════
+// Validation predicate — used by both Firebase and localStorage paths
+function isValidSub(s) {
+  return s && typeof s === 'object' &&
+    typeof s.studentName === 'string' &&
+    typeof s.studentId   === 'string' &&
+    typeof s.analysis    === 'string' &&
+    typeof s.timestamp   === 'string' &&
+    (s.case === 'A' || s.case === 'B');
+}
+
+// localStorage-only read (used as fallback when Firebase not configured)
+function getLocalSubmissions() {
+  try {
+    const raw = localStorage.getItem(LS_DATA);
+    if (!raw) return [];
+    return JSON.parse(raw).filter(isValidSub);
+  } catch(e) { return []; }
+}
+
+function loadDashboard() {
+  // Tear down any previous listener before starting a new one
+  if (_unsubscribe) { _unsubscribe(); _unsubscribe = null; }
+
+  if (USE_FIREBASE && db) {
+    // ── Real-time listener: table refreshes automatically whenever a student submits ──
+    _unsubscribe = db.collection('hrv_submissions')
+      .onSnapshot(snapshot => {
+        _cachedSubs = [];
+        snapshot.forEach(doc => {
+          const s = { ...doc.data(), _docId: doc.id };
+          if (isValidSub(s)) _cachedSubs.push(s);
+        });
+        renderStats(); renderTable();
+      }, err => {
+        console.warn('Firestore listener error, falling back to localStorage:', err.message);
+        _cachedSubs = getLocalSubmissions();
+        renderStats(); renderTable();
+      });
+    // Show live badge in header
+    document.getElementById('firebase-badge').style.display = 'inline';
+  } else {
+    _cachedSubs = getLocalSubmissions();
+    renderStats(); renderTable();
+  }
+}
+
+// ── Split from loadDashboard so onSnapshot can call it independently ──
+function renderStats() {
+  const subs = _cachedSubs;
+  document.getElementById('stat-total').textContent    = subs.length;
+  document.getElementById('stat-students').textContent = new Set(subs.map(s=>s.studentId)).size;
+  document.getElementById('stat-casea').textContent    = subs.filter(s=>s.case==='A').length;
+  document.getElementById('stat-caseb').textContent    = subs.filter(s=>s.case==='B').length;
+}
+
+// ══════════════════════════════════════════════════════
+//  TABLE RENDERING
+// ══════════════════════════════════════════════════════
+function renderTable() {
+  let subs = [..._cachedSubs]; // work on a copy so sort/filter don't mutate the cache
+
+  // Filter
+  const q    = document.getElementById('filter-search').value.trim().toLowerCase();
+  const cas  = document.getElementById('filter-case').value;
+  const sort = document.getElementById('filter-sort').value;
+
+  if (q)   subs = subs.filter(s=>s.studentName.toLowerCase().includes(q)||s.studentId.toLowerCase().includes(q));
+  if (cas) subs = subs.filter(s=>s.case===cas);
+
+  // Sort
+  if (sort==='newest') subs.sort((a,b)=>b.timestamp.localeCompare(a.timestamp));
+  if (sort==='oldest') subs.sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
+  if (sort==='name')   subs.sort((a,b)=>a.studentName.localeCompare(b.studentName));
+  if (sort==='id')     subs.sort((a,b)=>a.studentId.localeCompare(b.studentId));
+
+  const tbody = document.getElementById('sub-tbody');
+  const empty = document.getElementById('empty-state');
+
+  if (!subs.length) {
+    tbody.innerHTML='';
+    empty.style.display='block';
+    return;
+  }
+  empty.style.display='none';
+
+  tbody.innerHTML = subs.map((s,i) => {
+    const dt  = new Date(s.timestamp);
+    const dtStr = isNaN(dt) ? esc(s.timestamp) :
+      dt.toLocaleDateString('en-CA',{year:'numeric',month:'short',day:'numeric'})+
+      ' '+dt.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+    const preview = esc(s.analysis.slice(0,80)) + (s.analysis.length>80?'…':'');
+    const baseline = s.settings && s.settings.baselineRange ? esc(s.settings.baselineRange) : '—';
+    return `
+      <tr>
+        <td style="color:var(--muted);font-size:0.8rem;">${i+1}</td>
+        <td><strong>${esc(s.studentName)}</strong></td>
+        <td style="font-family:monospace;">${esc(s.studentId)}</td>
+        <td><span class="case-badge case-${s.case.toLowerCase()}">Case ${esc(s.case)}</span></td>
+        <td style="white-space:nowrap;font-size:0.82rem;">${dtStr}</td>
+        <td style="font-size:0.82rem;">${baseline}</td>
+        <td><div class="preview-text">${preview}</div></td>
+        <td class="action-cell">
+          <button class="tbl-btn view" onclick="viewSubmission(${esc(JSON.stringify(s).replace(/'/g,'&#x27;'))})">View</button>
+          <button class="tbl-btn del" onclick="deleteSubmission('${esc(s.id)}')">Delete</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  SUBMISSION DETAIL MODAL
+// ══════════════════════════════════════════════════════
+function viewSubmission(s) {
+  const dt  = new Date(s.timestamp);
+  const dtStr = isNaN(dt) ? s.timestamp :
+    dt.toLocaleDateString('en-CA',{weekday:'short',year:'numeric',month:'long',day:'numeric'})+
+    ' at '+dt.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('modal-title').textContent =
+    `${s.studentName} — Case ${s.case}`;
+
+  document.getElementById('modal-meta').innerHTML = `
+    <div class="meta-item"><div class="lbl">Student Name</div><div class="val">${esc(s.studentName)}</div></div>
+    <div class="meta-item"><div class="lbl">Student ID</div><div class="val" style="font-family:monospace">${esc(s.studentId)}</div></div>
+    <div class="meta-item"><div class="lbl">Case</div><div class="val"><span class="case-badge case-${s.case.toLowerCase()}">Case ${esc(s.case)}</span></div></div>
+    <div class="meta-item"><div class="lbl">Submitted</div><div class="val">${esc(dtStr)}</div></div>`;
+
+  const st = s.settings || {};
+  document.getElementById('modal-settings').innerHTML = `
+    <div class="settings-item"><div class="lbl">Baseline Period</div><div class="val">${esc(st.baselineRange||'—')}</div></div>
+    <div class="settings-item"><div class="lbl">Baseline Days</div><div class="val">${esc(st.baselineDays||'—')}</div></div>
+    <div class="settings-item"><div class="lbl">Baseline Band</div><div class="val">${esc(bandLabel(st.baselineOverlay))}</div></div>
+    <div class="settings-item"><div class="lbl">View Window</div><div class="val">${esc(st.viewRange||'—')}</div></div>
+    <div class="settings-item"><div class="lbl">Rolling Overlay</div><div class="val">${esc(overlayLabel(st.rollingOverlay))}</div></div>
+    <div class="settings-item"><div class="lbl">CoV Overlay</div><div class="val">${esc(covLabel(st.covOverlay))}</div></div>`;
+
+  const bs = (st.baselineStats)||{};
+  document.getElementById('modal-stats').innerHTML = `
+    <div class="settings-item"><div class="lbl">Mean HRV</div><div class="val">${esc(bs.mean||'—')} ms</div></div>
+    <div class="settings-item"><div class="lbl">±0.5 SD Range</div><div class="val">${esc(bs.sd05||'—')}</div></div>
+    <div class="settings-item"><div class="lbl">±1.0 SD Range</div><div class="val">${esc(bs.sd10||'—')}</div></div>
+    <div class="settings-item"><div class="lbl">CoV</div><div class="val">${esc(bs.cov||'—')}</div></div>`;
+
+  // Use textContent for analysis (the only user-supplied body of text) to fully prevent XSS
+  document.getElementById('modal-analysis').textContent = s.analysis;
+
+  openModal('detail-modal');
+}
+
+function bandLabel(v){return({none:'None',sd05:'±0.5 SD',sd10:'±1.0 SD'})[v]||v||'—';}
+function overlayLabel(v){return({none:'None',
+  '7d':'7-Day Rolling Avg','28d':'28-Day Rolling Avg'})[v]||v||'—';}
+function covLabel(v){return({none:'None',
+  cov7:'CoV 7-Day',cov28:'CoV 28-Day'})[v]||v||'—';}
+
+// ══════════════════════════════════════════════════════
+//  DELETE / CLEAR
+// ══════════════════════════════════════════════════════
+async function deleteSubmission(id) {
+  if (!confirm('Delete this submission? This cannot be undone.')) return;
+  if (USE_FIREBASE && db) {
+    try {
+      // Find the doc by its auto-ID field (stored as id) — use Firestore doc reference
+      const sub = _cachedSubs.find(s => s.id === id);
+      if (sub && sub._docId) {
+        await db.collection('hrv_submissions').doc(sub._docId).delete();
+        return; // onSnapshot will refresh the table automatically
+      }
+    } catch(e) { console.warn('Firestore delete failed:', e.message); }
+  }
+  // localStorage fallback
+  try {
+    const arr = getLocalSubmissions().filter(s => s.id !== id);
+    localStorage.setItem(LS_DATA, JSON.stringify(arr));
+    _cachedSubs = arr; renderStats(); renderTable();
+  } catch(e){}
+}
+
+async function clearAll() {
+  if (!confirm('Delete ALL student submissions? This cannot be undone.')) return;
+  if (USE_FIREBASE && db) {
+    try {
+      const snap  = await db.collection('hrv_submissions').get();
+      const batch = db.batch();
+      snap.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+      return; // onSnapshot refreshes UI automatically
+    } catch(e) { console.warn('Firestore clearAll failed:', e.message); }
+  }
+  localStorage.removeItem(LS_DATA);
+  _cachedSubs = []; renderStats(); renderTable();
+}
+
+// ══════════════════════════════════════════════════════
+//  CSV EXPORT
+// ══════════════════════════════════════════════════════
+function exportCSV() {
+  const subs = _cachedSubs;
+  if (!subs.length) { alert('No submissions to export.'); return; }
+
+  const headers = [
+    'Student Name','Student ID','Case','Submitted',
+    'Baseline Period','Baseline Days','Baseline Overlay',
+    'View Window','Rolling Overlay','CoV Overlay',
+    'Mean HRV (ms)','±0.5 SD Range','±1.0 SD Range','CoV (%)',
+    'Analysis'
+  ];
+
+  const rows = subs.map(s => {
+    const st = s.settings || {};
+    const bs = st.baselineStats || {};
+    const dt = new Date(s.timestamp);
+    const dtStr = isNaN(dt) ? s.timestamp :
+      dt.toLocaleDateString('en-CA',{year:'numeric',month:'2-digit',day:'2-digit'})+
+      ' '+dt.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',hour12:false});
+    return [
+      s.studentName, s.studentId, `Case ${s.case}`, dtStr,
+      st.baselineRange||'', st.baselineDays||'',
+      bandLabel(st.baselineOverlay), st.viewRange||'',
+      overlayLabel(st.rollingOverlay), covLabel(st.covOverlay),
+      bs.mean||'', bs.sd05||'', bs.sd10||'', bs.cov||'',
+      s.analysis
+    ].map(cell => `"${String(cell).replace(/"/g,'""')}"`);
+  });
+
+  const csv = [headers.map(h=>`"${h}"`), ...rows].map(r=>r.join(',')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href=url; a.download=`PHED3806_HRV_Submissions_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ══════════════════════════════════════════════════════
+//  MODAL HELPERS
+// ══════════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function closeModalOnOverlay(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+</script>
+</body>
+</html>
