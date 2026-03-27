@@ -477,16 +477,17 @@
 //  4. Replace every 'YOUR_...' value below with your project's values
 //  5. Do the same in dashboard.html (same config, same project)
 //
+//  Config is injected at serve-time via Netlify snippet injection (window.__FIREBASE_CONFIG__).
 //  Leave apiKey as 'YOUR_API_KEY' to run in localStorage-only mode
 //  (single machine — submissions won't reach the dashboard from other devices)
 // ═══════════════════════════════════════════════════════
-const FIREBASE_CONFIG = {
-  apiKey:            'AIzaSyBlH3S6jVx6InKWXpiWMHVi9hGYiHpyCjY',
-  authDomain:        'phed-3806-hrv-explorer.firebaseapp.com',
-  projectId:         'phed-3806-hrv-explorer',
-  storageBucket:     'phed-3806-hrv-explorer.firebasestorage.app',
-  messagingSenderId: '262014393057',
-  appId:             '1:262014393057:web:31dd19577d035a0e33b5a0'
+const FIREBASE_CONFIG = (typeof window !== 'undefined' && window.__FIREBASE_CONFIG__) || {
+  apiKey:            'YOUR_API_KEY',
+  authDomain:        'YOUR_PROJECT_ID.firebaseapp.com',
+  projectId:         'YOUR_PROJECT_ID',
+  storageBucket:     'YOUR_PROJECT_ID.appspot.com',
+  messagingSenderId: 'YOUR_SENDER_ID',
+  appId:             'YOUR_APP_ID'
 };
 
 // ── Auto-detect: placeholder values → localStorage-only fallback ──
